@@ -1,0 +1,71 @@
+apiVersion: machinelearning.seldon.io/v1alpha2 
+
+kind: SeldonDeployment 
+
+metadata: 
+
+  name: canary-deployment 
+
+spec: 
+
+  name: canary-deployment 
+
+  predictors: 
+
+  - componentSpecs: 
+
+    - spec: 
+
+        containers: 
+
+        - name: classifier 
+
+          image: <container uri to model version 1> 
+
+    graph: 
+
+      children: [] 
+
+      endpoint: 
+
+        type: REST 
+
+      name: classifier 
+
+      type: MODEL 
+
+    name: main 
+
+    replicas: 1 
+
+     traffic: 75 
+
+  - componentSpecs: 
+
+    - spec: 
+
+        containers: 
+
+        - name: classifier 
+
+          image: <container uri to model version 2> 
+
+    graph: 
+
+      children: [] 
+
+      endpoint: 
+
+        type: REST 
+
+      name: classifier 
+
+      type: MODEL 
+
+    name: canary 
+
+    replicas: 1 
+
+     traffic: 25 
+
+ 

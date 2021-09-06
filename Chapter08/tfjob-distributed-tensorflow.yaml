@@ -1,0 +1,49 @@
+apiVersion: "kubeflow.org/v1" 
+
+kind: "TFJob" 
+
+metadata: 
+
+  name: "distributed-tensorflow-job" 
+
+spec: 
+
+  tfReplicaSpecs: 
+
+    PS: 
+
+      replicas: 1 
+
+      restartPolicy: Never 
+
+      template: 
+
+        spec: 
+
+          containers: 
+
+            - name: tensorflow 
+
+              image: <model training image uri> 
+
+              command:	 
+
+    Worker: 
+
+      replicas: 2 
+
+      restartPolicy: Never 
+
+      template: 
+
+        spec: 
+
+          containers: 
+
+            - name: tensorflow 
+
+              image: <model training image uri>  
+
+              command:  
+
+ 

@@ -1,0 +1,27 @@
+apiVersion: machinelearning.seldon.io/v1alpha2 
+
+kind: SeldonDeployment 
+
+metadata: 
+
+  name: sklearn 
+
+spec: 
+
+  name: sklearn-model 
+
+  predictors: 
+
+  - graph: 
+
+      children: [] 
+
+      implementation: SKLEARN_SERVER 
+
+      modelUri: <model uri to model artifacts on the cloud storage> 
+
+      name: classifier 
+
+    name: default 
+
+    replicas: 1 

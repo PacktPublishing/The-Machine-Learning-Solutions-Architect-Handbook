@@ -1,0 +1,35 @@
+cat << EOF > bank_churn.yaml  
+
+apiVersion: machinelearning.seldon.io/v1alpha2 
+
+kind: SeldonDeployment 
+
+metadata: 
+
+  name: bank-churn 
+
+spec: 
+
+  name: bank-churn 
+
+  predictors: 
+
+    - graph: 
+
+        children: [] 
+
+        implementation: SKLEARN_SERVER 
+
+        modelUri: <<S3 uri of model file>> 
+
+        envSecretRefName: aws-secret 
+
+        name: classifier 
+
+      name: default 
+
+      replicas: 1 
+
+EOF 
+
+ 

@@ -1,0 +1,17 @@
+apiVersion: "serving.kubeflow.org/v1alpha2" 
+
+kind: "InferenceService" 
+
+metadata: 
+
+  name: "model-name" 
+
+spec: 
+
+  default: 
+
+    predictor: 
+
+      tensorflow: 
+
+        storageUri: <uri to model storage such as s3>  

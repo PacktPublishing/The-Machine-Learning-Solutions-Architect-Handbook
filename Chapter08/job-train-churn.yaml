@@ -1,0 +1,27 @@
+apiVersion: batch/v1 
+
+kind: Job 
+
+metadata: 
+
+  name: train-churn-job 
+
+spec: 
+
+  template: 
+
+    spec: 
+
+      containers: 
+
+      - name: train-container 
+
+        imagePullPolicy: Always 
+
+        image: <model training uri> 
+
+        command: ["python", "train.py"] 
+
+      restartPolicy: Never 
+
+  backoffLimit: 4 
