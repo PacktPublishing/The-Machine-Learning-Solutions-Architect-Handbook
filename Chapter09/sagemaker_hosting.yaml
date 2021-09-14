@@ -1,0 +1,51 @@
+Description: "Model hosting cloudformation template" 
+Resources: 
+  Endpoint: 
+    Type: "AWS::SageMaker::Endpoint" 
+    Properties: 
+      EndpointConfigName: 
+        !GetAtt EndpointConfig.EndpointConfigName 
+  EndpointConfig: 
+    Type: "AWS::SageMaker::EndpointConfig" 
+    Properties: 
+      ProductionVariants: 
+        - InitialInstanceCount: 1 
+          InitialVariantWeight: 1.0 
+          InstanceType: ml.t2.large 
+          ModelName: !GetAtt Model.ModelName 
+          VariantName: !GetAtt Model.ModelName 
+  Model: 
+    Type: "AWS::SageMaker::Model" 
+    Properties: 
+      PrimaryContainer: 
+        Image: <container uri> 
+      ExecutionRoleArn: !GetAtt ExecutionRole.Arn 
+  ExecutionRole:  
+    Type: "AWS::IAM::Role" 
+    Properties:  
+      AssumeRolePolicyDocument:  
+        Version: "2012-10-17" 
+        Statement:  
+          -  
+            Effect: "Allow" 
+            Principal:  
+              Service:  
+                - "sagemaker.amazonaws.com" 
+            Action:  
+              - "sts:AssumeRole" 
+      Path: "/" 
+      Policies:  
+        -  
+          PolicyName: "root" 
+          PolicyDocument:  
+            Version: "2012-10-17" 
+            Statement:  
+              -  
+                Effect: "Allow" 
+                Action: "*" 
+                Resource: "*" 
+Outputs: 
+  EndpointId: 
+    Value: !Ref Endpoint 
+  EndpointName: 
+    Value: !GetAtt Endpoint.EndpointName 
