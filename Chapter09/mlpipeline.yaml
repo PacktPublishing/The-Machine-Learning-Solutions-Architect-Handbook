@@ -1,0 +1,225 @@
+Parameters: 
+
+  BranchName: 
+
+    Description: CodeCommit branch name 
+
+    Type: String 
+
+    Default: master 
+
+  RepositoryName: 
+
+    Description: CodeCommit repository name 
+
+    Type: String 
+
+    Default: MLSA-repo 
+
+  ProjectName: 
+
+    Description: ML project name 
+
+    Type: String 
+
+    Default: FinanceSentiment 
+
+  MlOpsStepFunctionArn: 
+
+    Description: Step Function Arn 
+
+    Type: String 
+
+    Default: arn:aws:states:ca-central-1:300165273893:stateMachine:TrainingStateMachine2-89fJblFk0h7b 
+
+Resources: 
+
+  CodePipelineArtifactStoreBucket: 
+
+    Type: 'AWS::S3::Bucket' 
+
+    DeletionPolicy: Delete 
+
+  Pipeline: 
+
+    Type: 'AWS::CodePipeline::Pipeline' 
+
+    Properties: 
+
+      Name: codecommit-events-pipeline 
+
+      RoleArn: !GetAtt CodePipelineServiceRole.Arn 
+
+      ArtifactStore: 
+
+        Type: S3 
+
+        Location: !Ref CodePipelineArtifactStoreBucket 
+
+      Stages: 
+
+        - Name: Source 
+
+          Actions: 
+
+            - Name: SourceAction 
+
+              ActionTypeId: 
+
+                Category: Source 
+
+                Owner: AWS 
+
+                Version: 1 
+
+                Provider: CodeCommit 
+
+              OutputArtifacts: 
+
+                - Name: SourceOutput 
+
+              Configuration: 
+
+                BranchName: !Ref BranchName 
+
+                RepositoryName: !Ref RepositoryName 
+
+                PollForSourceChanges: false 
+
+              RunOrder: 1 
+
+        - Name: ModelBuilding 
+
+          Actions: 
+
+            - Name: ExecuteSagemakerMLOpsStepFunction 
+
+              InputArtifacts: 
+
+                - Name: SourceOutput 
+
+              ActionTypeId: 
+
+                Category: Invoke 
+
+                Owner: AWS 
+
+                Version: 1 
+
+                Provider: StepFunctions 
+
+              OutputArtifacts: 
+
+                - Name: myOutputArtifact 
+
+              Configuration: 
+
+                StateMachineArn: !Ref MlOpsStepFunctionArn 
+
+                ExecutionNamePrefix: finbert 
+
+                InputType: FilePath 
+
+                Input: sf_start_params.json 
+
+              RunOrder: 1 
+
+      ArtifactStore: 
+
+        Type: S3 
+
+        Location: !Ref CodePipelineArtifactStoreBucket 
+
+  CodePipelineServiceRole: 
+
+    Type: 'AWS::IAM::Role' 
+
+    Properties: 
+
+      AssumeRolePolicyDocument: 
+
+        Version: 2012-10-17 
+
+        Statement: 
+
+          - Effect: Allow 
+
+            Principal: 
+
+              Service: 
+
+                - codepipeline.amazonaws.com 
+
+            Action: 'sts:AssumeRole' 
+
+      Path: / 
+
+      Policies: 
+
+        - PolicyName: AWS-CodePipeline-Service-3 
+
+          PolicyDocument: 
+
+            Version: 2012-10-17 
+
+            Statement: 
+
+              - Resource: '*' 
+
+                Effect: Allow 
+
+                Action: 
+
+                  - 'codecommit:CancelUploadArchive' 
+
+                  - 'codecommit:GetBranch' 
+
+                  - 'codecommit:GetCommit' 
+
+                  - 'codecommit:GetUploadArchiveStatus' 
+
+                  - 'codecommit:UploadArchive' 
+
+              - Resource: 
+
+                  - !Sub arn:aws:s3:::${CodePipelineArtifactStoreBucket}/* 
+
+                Effect: Allow 
+
+                Action: 
+
+                  - s3:PutObject 
+
+                  - s3:GetObject 
+
+                  - s3:GetObjectVersion 
+
+                  - s3:GetBucketVersioning 
+
+              - Resource: "*" 
+
+                Effect: Allow 
+
+                Action:                   
+
+                  - codebuild:StartBuild 
+
+                  - codebuild:BatchGetBuilds 
+
+                  - iam:PassRole 
+
+                  - states:DescribeStateMachine 
+
+                  - states:StartExecution 
+
+                  - states:DescribeExecution   
+
+Outputs: 
+
+  PipelineUrl: 
+
+    Value: !Sub https://console.aws.amazon.com/codepipeline/home?region=${AWS::Region}#/view/${Pipeline} 
+
+  ArtifactBucket: 
+
+    Value: !Ref CodePipelineArtifactStoreBucket 

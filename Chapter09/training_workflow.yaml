@@ -1,0 +1,229 @@
+AWSTemplateFormatVersion: 2010-09-09 
+
+Description: 'AWS Step Functions sample project for training a model and save the model' 
+
+Parameters: 
+
+    StepFunctionExecutionRoleArn:  
+
+        Type: String 
+
+        Description: Enter the role for Step Function Workflow execution 
+
+        ConstraintDescription: requires a valid arn value 
+
+        AllowedPattern: 'arn:aws:iam::\w+:role/.*' 
+
+Resources: 
+
+  TrainingStateMachine2: 
+
+    Type: AWS::StepFunctions::StateMachine 
+
+    Properties: 
+
+        RoleArn: !Ref StepFunctionExecutionRoleArn 
+
+        DefinitionString: !Sub | 
+
+               { 
+
+                  "StartAt": "SageMaker Training Step", 
+
+                  "States": { 
+
+                    "SageMaker Training Step": { 
+
+                      "Resource": "arn:aws:states:::sagemaker:createTrainingJob.sync", 
+
+                      "Parameters": { 
+
+                        "AlgorithmSpecification": { 
+
+                          "TrainingImage.$": "$.TrainingImage", 
+
+                          "TrainingInputMode": "File", 
+
+                          "MetricDefinitions": [ 
+
+                            { 
+
+                              "Name": "train:loss", 
+
+                              "Regex": "Average training loss: (.*?);" 
+
+                            }, 
+
+                            { 
+
+                              "Name": "test:accuracy", 
+
+                              "Regex": "Test set: Accuracy: (.*?);" 
+
+                            } 
+
+                          ] 
+
+                        }, 
+
+                        "OutputDataConfig": { 
+
+                          "S3OutputPath.$": "$.S3OutputPath" 
+
+                        }, 
+
+                        "StoppingCondition": { 
+
+                          "MaxRuntimeInSeconds": 86400 
+
+                        }, 
+
+                        "ResourceConfig": { 
+
+                          "InstanceCount": 1, 
+
+                          "InstanceType": "ml.g4dn.4xlarge", 
+
+                          "VolumeSizeInGB": 30 
+
+                        }, 
+
+                        "RoleArn.$": "$.SageMakerRoleArn", 
+
+                        "InputDataConfig": [ 
+
+                          { 
+
+                            "DataSource": { 
+
+                              "S3DataSource": { 
+
+                                "S3DataType": "S3Prefix", 
+
+                                "S3Uri.$": "$.S3UriTraining", 
+
+                                "S3DataDistributionType": "FullyReplicated" 
+
+                              } 
+
+                            }, 
+
+                            "ChannelName": "training" 
+
+                          }, 
+
+                          { 
+
+                            "DataSource": { 
+
+                              "S3DataSource": { 
+
+                                "S3DataType": "S3Prefix", 
+
+                                "S3Uri.$": "$.S3UriTesting", 
+
+                                "S3DataDistributionType": "FullyReplicated" 
+
+                              } 
+
+                            }, 
+
+                            "ChannelName": "testing" 
+
+                          } 
+
+                        ], 
+
+                        "HyperParameters": { 
+
+                          "epochs": "4", 
+
+                          "lr": "5e-05", 
+
+                          "num_labels": "3", 
+
+                          "train_file": "\"train.csv\"", 
+
+                          "test_file": "\"test.csv\"", 
+
+                          "MAX_LEN": "315", 
+
+                          "batch-size": "16", 
+
+                          "test-batch-size": "10", 
+
+                          "sagemaker_submit_directory.$": "States.JsonToString($.SAGEMAKER_SUBMIT_DIRECTORY)", 
+
+                          "sagemaker_program": "\"train.py\"", 
+
+                          "sagemaker_container_log_level": "20", 
+
+                          "sagemaker_job_name": "\"berttraining\"", 
+
+                          "sagemaker_region.$": "States.JsonToString($.SAGEMAKER_REGION)" 
+
+                        }, 
+
+                        "TrainingJobName.$": "$$.Execution.Name", 
+
+                        "DebugHookConfig": { 
+
+                          "S3OutputPath.$": "$.S3OutputPath" 
+
+                        } 
+
+                      }, 
+
+                      "Type": "Task", 
+
+                      "Next": "Save model" 
+
+                    }, 
+
+                    "Save model": { 
+
+                      "Parameters": { 
+
+                         "ModelName.$": "$$.Execution.Name", 
+
+                         "PrimaryContainer": { 
+
+                           "Image.$": "$$.Execution.Input['InferenceImage']", 
+
+                           "Environment": { 
+
+                             "SAGEMAKER_PROGRAM.$": "$$.Execution.Input['SAGEMAKER_PROGRAM']",  
+
+                             "SAGEMAKER_SUBMIT_DIRECTORY.$": "$$.Execution.Input['SAGEMAKER_SUBMIT_DIRECTORY']", 
+
+                             "SAGEMAKER_CONTAINER_LOG_LEVEL": "20", 
+
+                             "SAGEMAKER_REGION.$": "$$.Execution.Input['SAGEMAKER_REGION']" 
+
+                           }, 
+
+                           "ModelDataUrl.$": "$['ModelArtifacts']['S3ModelArtifacts']" 
+
+                         }, 
+
+                         "ExecutionRoleArn.$": "$$.Execution.Input['SageMakerRoleArn']" 
+
+                       }, 
+
+                       "Resource": "arn:aws:states:::sagemaker:createModel", 
+
+                       "Type": "Task", 
+
+                       "End": true 
+
+                    } 
+
+                  } 
+
+                } 
+
+Outputs: 
+
+    StateMachineArn: 
+
+      Value: !Ref TrainingStateMachine2 

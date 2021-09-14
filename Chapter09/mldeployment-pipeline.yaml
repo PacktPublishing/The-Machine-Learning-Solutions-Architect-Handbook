@@ -1,0 +1,357 @@
+Parameters: 
+
+  BranchName: 
+
+    Description: CodeCommit branch name 
+
+    Type: String 
+
+    Default: master 
+
+  RepositoryName: 
+
+    Description: CodeCommit repository name 
+
+    Type: String 
+
+    Default: MLSA-repo 
+
+  ProjectName: 
+
+    Description: ML project name 
+
+    Type: String 
+
+    Default: FinanceSentiment 
+
+  CodePipelineSNSTopic: 
+
+    Description: SNS topic for NotificationArn 
+
+    Default: arn:aws:sns:ca-central-1:300165273893:CodePipelineSNSTopicApproval 
+
+    Type: String 
+
+  ProdStackConfig: 
+
+    Default: mldeploymentconfig.json 
+
+    Description: The configuration file name for the production WordPress stack 
+
+    Type: String 
+
+  ProdStackName: 
+
+    Default: FinanceSentimentMLStack1 
+
+    Description: A name for the production WordPress stack 
+
+    Type: String 
+
+  TemplateFileName: 
+
+    Default: mldeployment.yaml 
+
+    Description: The file name of the WordPress template 
+
+    Type: String 
+
+  ChangeSetName: 
+
+    Default: FinanceSentimentchangeset 
+
+    Description: A name for the production stack change set 
+
+    Type: String 
+
+Resources: 
+
+  CodePipelineArtifactStoreBucket: 
+
+    Type: 'AWS::S3::Bucket' 
+
+    DeletionPolicy: Delete 
+
+  Pipeline: 
+
+    Type: 'AWS::CodePipeline::Pipeline' 
+
+    Properties: 
+
+      Name: deployment-pipeline 
+
+      RoleArn: !GetAtt CodePipelineServiceRole.Arn 
+
+      ArtifactStore: 
+
+        Type: S3 
+
+        Location: !Ref CodePipelineArtifactStoreBucket 
+
+      Stages: 
+
+        - Name: TemplateSource 
+
+          Actions: 
+
+            - Name: SourceAction 
+
+              ActionTypeId: 
+
+                Category: Source 
+
+                Owner: AWS 
+
+                Version: 1 
+
+                Provider: CodeCommit 
+
+              OutputArtifacts: 
+
+                - Name: TemplateSource 
+
+              Configuration: 
+
+                BranchName: !Ref BranchName 
+
+                RepositoryName: !Ref RepositoryName 
+
+                PollForSourceChanges: false 
+
+              RunOrder: 1 
+
+        - Name: DeployStage 
+
+          Actions: 
+
+            - Name: CreateChangeSet 
+
+              ActionTypeId: 
+
+                Category: Deploy 
+
+                Owner: AWS 
+
+                Provider: CloudFormation 
+
+                Version: '1' 
+
+              InputArtifacts: 
+
+                - Name: TemplateSource 
+
+              Configuration: 
+
+                ActionMode: CHANGE_SET_REPLACE 
+
+                RoleArn: !GetAtt [CFNRole, Arn] 
+
+                StackName: !Ref ProdStackName 
+
+                ChangeSetName: !Ref ChangeSetName 
+
+                TemplateConfiguration: !Sub "TemplateSource::${ProdStackConfig}" 
+
+                TemplatePath: !Sub "TemplateSource::${TemplateFileName}" 
+
+              RunOrder: '1' 
+
+            - Name: ApproveChangeSet 
+
+              ActionTypeId: 
+
+                Category: Approval 
+
+                Owner: AWS 
+
+                Provider: Manual 
+
+                Version: '1' 
+
+              Configuration: 
+
+                NotificationArn: !Ref CodePipelineSNSTopic 
+
+                CustomData: !Sub 'A new change set was created for the ${ProdStackName} stack. Do you want to implement the changes?' 
+
+              RunOrder: '2' 
+
+            - Name: ExecuteChangeSet 
+
+              ActionTypeId: 
+
+                Category: Deploy 
+
+                Owner: AWS 
+
+                Provider: CloudFormation 
+
+                Version: '1' 
+
+              Configuration: 
+
+                ActionMode: CHANGE_SET_EXECUTE 
+
+                ChangeSetName: !Ref ChangeSetName 
+
+                RoleArn: !GetAtt [CFNRole, Arn] 
+
+                StackName: !Ref ProdStackName 
+
+              RunOrder: '3' 
+
+  CFNRole: 
+
+    Type: AWS::IAM::Role 
+
+    Properties: 
+
+      AssumeRolePolicyDocument: 
+
+        Statement: 
+
+        - Action: ['sts:AssumeRole'] 
+
+          Effect: Allow 
+
+          Principal: 
+
+            Service: [cloudformation.amazonaws.com] 
+
+        Version: '2012-10-17' 
+
+      Path: / 
+
+      Policies: 
+
+        - PolicyName: CloudFormationRole 
+
+          PolicyDocument: 
+
+            Version: '2012-10-17' 
+
+            Statement: 
+
+              - Action: 
+
+                  - 'sagemaker:*' 
+
+                Effect: Allow 
+
+                Resource: '*' 
+
+  CodePipelineServiceRole: 
+
+    Type: 'AWS::IAM::Role' 
+
+    Properties: 
+
+      AssumeRolePolicyDocument: 
+
+        Version: 2012-10-17 
+
+        Statement: 
+
+          - Effect: Allow 
+
+            Principal: 
+
+              Service: 
+
+                - codepipeline.amazonaws.com 
+
+            Action: 'sts:AssumeRole' 
+
+      Path: / 
+
+      Policies: 
+
+        - PolicyName: AWS-CodePipeline-Service-3 
+
+          PolicyDocument: 
+
+            Version: 2012-10-17 
+
+            Statement: 
+
+              - Resource: '*' 
+
+                Effect: Allow 
+
+                Action: 
+
+                  - 'codecommit:CancelUploadArchive' 
+
+                  - 'codecommit:GetBranch' 
+
+                  - 'codecommit:GetCommit' 
+
+                  - 'codecommit:GetUploadArchiveStatus' 
+
+                  - 'codecommit:UploadArchive' 
+
+              - Resource: 
+
+                  - !Sub arn:aws:s3:::${CodePipelineArtifactStoreBucket}/* 
+
+                Effect: Allow 
+
+                Action: 
+
+                  - s3:PutObject 
+
+                  - s3:GetObject 
+
+                  - s3:GetObjectVersion 
+
+                  - s3:GetBucketVersioning 
+
+              - Resource: "*" 
+
+                Effect: Allow 
+
+                Action:                   
+
+                  - codebuild:StartBuild 
+
+                  - codebuild:BatchGetBuilds 
+
+                  - iam:PassRole 
+
+                  - states:DescribeStateMachine 
+
+                  - states:StartExecution 
+
+                  - states:DescribeExecution 
+
+                  - cloudformation:CreateStack 
+
+                  - cloudformation:DescribeStacks 
+
+                  - cloudformation:DeleteStack 
+
+                  - cloudformation:UpdateStack 
+
+                  - cloudformation:CreateChangeSet 
+
+                  - cloudformation:ExecuteChangeSet 
+
+                  - cloudformation:DeleteChangeSet 
+
+                  - cloudformation:DescribeChangeSet 
+
+                  - cloudformation:SetStackPolicy 
+
+                  - iam:PassRole 
+
+                  - sns:Publish 
+
+Outputs: 
+
+  PipelineUrl: 
+
+    Value: !Sub https://console.aws.amazon.com/codepipeline/home?region=${AWS::Region}#/view/${Pipeline} 
+
+  ArtifactBucket: 
+
+    Value: !Ref CodePipelineArtifactStoreBucket 

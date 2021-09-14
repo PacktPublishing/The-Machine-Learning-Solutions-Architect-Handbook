@@ -1,0 +1,21 @@
+{ 
+
+  "TrainingImage": "<aws hosting account>.dkr.ecr.<aws region>.amazonaws.com/pytorch-training:1.3.1-gpu-py3", 
+
+  "S3OutputPath": "s3://<your s3 bucket name>/sagemaker/pytorch-bert-financetext", 
+
+  "SageMakerRoleArn": "arn:aws:iam::<your aws account>:role/service-role/<your sagemaker execution role>", 
+
+  "S3UriTraining": "s3://<your AWS S3 bucket>/sagemaker/pytorch-bert-financetext/train.csv", 
+
+  "S3UriTesting": "s3://<your AWS S3 bucket>/sagemaker/pytorch-bert-financetext/test.csv", 
+
+  "InferenceImage": " aws hosting account>.dkr.ecr. <aws region>.amazonaws.com/pytorch-inference:1.3.1-cpu-py3", 
+
+  "SAGEMAKER_PROGRAM": "train.py", 
+
+  "SAGEMAKER_SUBMIT_DIRECTORY": "s3:// <your AWS S3 bucket> /berttraining/source/sourcedir.tar.gz", 
+
+  "SAGEMAKER_REGION": "<your aws region>" 
+
+} 

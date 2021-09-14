@@ -1,0 +1,83 @@
+{ 
+
+    "Version": "2012-10-17", 
+
+    "Statement": [ 
+
+        { 
+
+            "Effect": "Allow", 
+
+            "Action": [ 
+
+                "sagemaker:CreateModel", 
+
+                "sagemaker:DeleteEndpointConfig", 
+
+                "sagemaker:DescribeTrainingJob", 
+
+                "sagemaker:CreateEndpoint", 
+
+                "sagemaker:StopTrainingJob", 
+
+                "sagemaker:CreateTrainingJob", 
+
+                "sagemaker:UpdateEndpoint", 
+
+                "sagemaker:CreateEndpointConfig", 
+
+                "sagemaker:DeleteEndpoint" 
+
+            ], 
+
+            "Resource": [ 
+
+                "arn:aws:sagemaker:*:*:*" 
+
+            ] 
+
+        }, 
+
+        { 
+
+            "Effect": "Allow", 
+
+            "Action": [ 
+
+                "events:DescribeRule", 
+
+                "events:PutRule", 
+
+                "events:PutTargets" 
+
+            ], 
+
+            "Resource": [ 
+
+                "arn:aws:events:*:*:rule/StepFunctionsGetEventsForSageMakerTrainingJobsRule" 
+
+            ] 
+
+        }, 
+
+        { 
+
+            "Effect": "Allow", 
+
+            "Action": [ 
+
+                "lambda:InvokeFunction" 
+
+            ], 
+
+            "Resource": [ 
+
+                "arn:aws:lambda:*:*:function:query-training-status*" 
+
+            ] 
+
+        } 
+
+    ] 
+
+} 

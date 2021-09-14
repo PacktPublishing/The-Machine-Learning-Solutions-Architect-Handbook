@@ -1,0 +1,49 @@
+Description: "Basic Hosting of registered model" 
+
+Parameters: 
+
+  ModelName: 
+
+    Description: Model Name  
+
+    Type: String 
+
+    Default: <mode name> 
+
+Resources: 
+
+  Endpoint: 
+
+    Type: "AWS::SageMaker::Endpoint" 
+
+    Properties: 
+
+      EndpointConfigName: !GetAtt EndpointConfig.EndpointConfigName 
+
+  EndpointConfig: 
+
+    Type: "AWS::SageMaker::EndpointConfig" 
+
+    Properties: 
+
+      ProductionVariants: 
+
+        - InitialInstanceCount: 1 
+
+          InitialVariantWeight: 1.0 
+
+          InstanceType: ml.m4.xlarge 
+
+          ModelName: !Ref ModelName 
+
+          VariantName: !Ref ModelName 
+
+Outputs: 
+
+  EndpointId: 
+
+    Value: !Ref Endpoint 
+
+  EndpointName: 
+
+    Value: !GetAtt Endpoint.EndpointName 
