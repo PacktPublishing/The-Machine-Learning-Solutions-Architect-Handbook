@@ -47,8 +47,8 @@ With the following software and hardware list you can run all code files present
 | Chapter  | Software required                   | OS required                        |
 | -------- | ------------------------------------| -----------------------------------|
 | 3-12	   | Angular 9                           | Windows, Mac OS X, and Linux (Any) |
-| 1-7      | TypeScript 3.7                      | Windows, Mac OS X, and Linux (Any  |
-| 1-7      | ECMAScript 11                       | Windows, Mac OS X, and Linux (Any  |
+| 3-12     | TypeScript 3.7                      | Windows, Mac OS X, and Linux (Any  |
+| 3-12     | ECMAScript 11                       | Windows, Mac OS X, and Linux (Any  |
 
 
 We also provide a PDF file that has color images of the screenshots/diagrams used in this book. [Click here to download it](https://static.packt-cdn.com/downloads/9781801072168_ColorImages.pdf).
@@ -59,7 +59,7 @@ We also provide a PDF file that has color images of the screenshots/diagrams use
 
 * Amazon SageMaker Best Practices [[Packt]](https://www.packtpub.com/product/amazon-sagemaker-best-practices/9781801070522?utm_source=github&utm_medium=repository&utm_campaign=9781801070522) [[Amazon]](https://www.amazon.com/dp/1801070520)
 
-## Get to Know the Authors
+## Get to Know the Author
 **David Ping**
 is a senior technology leader with over 25 years of experience in the technology and financial services industry. 
 His technology focus areas include cloud architecture, enterprise ML platform design, large-scale model training, intelligent document processing, intelligent media processing, intelligent search, and data platforms. 
