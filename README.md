@@ -47,8 +47,8 @@ With the following software and hardware list you can run all code files present
 | Chapter  | Software required                   | OS required                        |
 | -------- | ------------------------------------| -----------------------------------|
 | 3-12	   | Angular 9                           | Windows, Mac OS X, and Linux (Any) |
-| 3-12     | TypeScript 3.7                      | Windows, Mac OS X, and Linux (Any  |
-| 3-12     | ECMAScript 11                       | Windows, Mac OS X, and Linux (Any  |
+| 3-12     | TypeScript 3.7                      | Windows, Mac OS X, and Linux (Any) |
+| 3-12     | ECMAScript 11                       | Windows, Mac OS X, and Linux (Any) |
 
 
 We also provide a PDF file that has color images of the screenshots/diagrams used in this book. [Click here to download it](https://static.packt-cdn.com/downloads/9781801072168_ColorImages.pdf).
